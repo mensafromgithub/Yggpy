@@ -8,7 +8,7 @@ class TypeError(TreeError):
         super().__init__(error)
 
     def __str__(self):
-        return f"Wrong type {type(self.error['Error']['Value'])} for attribute: {self.error['attribute']['Name']}. It must be {type(self.error['attribute']['Value'])}"
+        return f"Wrong type {self.error['Error']['Type']} for attribute: {self.error['attribute']['Name']}. It can be {', '.join(self.error['attribute']['Types'])}"
 
 
 class ConnectionError(TreeError):

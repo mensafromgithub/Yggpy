@@ -1,10 +1,19 @@
 class TreeError(Exception):
-    pass
+    def __init__(self, error: dict):
+        self.error = error
 
 
 class TypeError(TreeError):
-    pass
+    def __init__(self, error: dict):
+        super().__init__(error)
+
+    def __str__(self):
+        return f"Wrong type {type(self.error['Error']['Value'])} for attribute: {self.error['attribute']['Name']}. It must be {type(self.error['attribute']['Value'])}"
 
 
 class ConnectionError(TreeError):
-    pass
+    def __init__(self, error: dict):
+        super().__init__(error)
+
+    def __str__(self):
+        return f"Wrong inputs for attribute: {self.error['attribute']['Name']}"

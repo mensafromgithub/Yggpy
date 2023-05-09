@@ -93,7 +93,7 @@ class Twig:
             self.user = user
             for i in self.signals:
                 for j in self.signals[i]:
-                    self.signals[i][j].chat_id = self.user
+                    self.signals[i][j]['chat_id'] = self.user
             return True
         return False
 
@@ -105,7 +105,7 @@ class Twig:
     def switch_keyboards(leaf1, leaf2):
         leaf1.keyboard, leaf2.keyboard = leaf2.keyboard, leaf1.keyboard
 
-    def make_metre(self, cont):
+    def make_metre(self, cont): # 
         if (not isinstance(cont, Twig)) and (not isinstance(cont, Leaf)):
                 return False
         n = len(self) if len(self) > 0 else len(self) + 1
@@ -117,7 +117,7 @@ class Twig:
                 self.callback_handlers[n - 1][0][i] = self.bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda: self(data=str(value[0].callback_data), ind=n))
         return True
 
-    def replace_metre(self, cont, ind, condition=lambda x: True, keyboard=None):
+    def replace_metre(self, cont, ind): #
         if ind not in range(len(self)):
             return False
         if (not isinstance(cont, Twig)) and (not isinstance(cont, Leaf)):
@@ -129,13 +129,13 @@ class Twig:
                 self.callback_handlers[n - 1][0][i] = self.bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda: self(data=str(value[0].callback_data), ind=n))
         return True
 
-    def switch_metre(self, switchable, switched):
+    def switch_metre(self, switchable, switched): #
         if switchable not in range(len(self)) or switched not in range(len(self)):
             return False
         self.signals[switchable], self.signals[switched] = self.signals[switched], self.signals[switchable]
         return True
 
-    def switch_metre_without_conds(self, switchable, switched):
+    def switch_metre_without_conds(self, switchable, switched): #
         if switchable not in range(len(self)) or switched not in range(len(self)):
             return False
         if len(self[switchable]) != len(self[switched]):
@@ -145,7 +145,7 @@ class Twig:
         self.signals[switchable], self.signals[switched] = self.signals[switched], self.signals[switchable]
         return True
 
-    def del_condition(self, ind):
+    def del_condition(self, ind): #
         if ind not in range(len(self)):
             return False
         if len(self[ind]) != 1:
@@ -166,7 +166,7 @@ class Twig:
             self[ind][i].set_condition(condition[i])
         return True
 
-    def set_condition(self, ind, n, condition):
+    def set_condition(self, ind, n, condition): #
         if type(condition) != type(lambda x: True):
             return False
         if ind not in range(len(self)):
@@ -178,7 +178,7 @@ class Twig:
         self[ind][n].set_condition(condition)
         return True
 
-    def switch_conditions_without_metres(self, switchable, switched):
+    def switch_conditions_without_metres(self, switchable, switched): #
         if switchable not in range(len(self)) or switched not in range(len(self)):
             return False
         if len(self[switchable]) != len(self[switched]):
@@ -196,7 +196,7 @@ class Twig:
         Twig.switch_conditions(self[ind][switchable], self[ind][switched])
         return True
 
-    def replace_leaf(self, cont, ind, n):
+    def replace_leaf(self, cont, ind, n): #
         if ind not in range(len(self)):
             return False
         if n not in range(len(self[ind])):
@@ -217,18 +217,16 @@ class Twig:
         self.signals[ind][switchable], self.signals[ind][switched] = self.signals[ind][switched], self.signals[ind][switchable]
         return True
     
-    def add_leaf(self, cont, condition,  ind, keyboard=None):
+    def add_leaf(self, cont, ind): #
             if ind not in range(len(self)):
              return False
             if (not isinstance(cont, Twig)) and (not isinstance(cont, Leaf)):
                 return False
             n = len(self[ind])
-            self.conditions[ind][n] = condition
             self.signals[ind][n] = cont
             self.callback_handlers[ind][n] = {}
-            if keyboard != None:
-                cd = [f'{n}{i[0].callback_data}' for i in keyboard.keyboard]
-                for i, value in enumerate(keyboard.keyboard):
+            if cont.keyboard != None:
+                for i, value in enumerate(cont.keyboard.keyboard):
                     self.callback_handlers[ind][n][i] = self.bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda: self(data=str(value[0].callback_data), ind=n))
             return True
 
@@ -284,7 +282,7 @@ class Leaf:
             raise TypeError({'Error': {'Type': type(condition)}, 'attribute': {'Name': 'condition', 'Types': [type(lambda x: True)]}})
         self.content_type = ''
         self.condition = lambda x: True
-        self.__keyboard = None
+        self.keyboard = None
         self.types = {"text": {'chat_id': None, 
                                'text': None, 
                                'parse_mode': None, 

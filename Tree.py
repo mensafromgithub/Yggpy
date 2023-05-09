@@ -65,18 +65,17 @@ class Twig:
     def __call__(self, data=None,  ind=0):
         try:
                 sig = self.signals[ind]
-                n = [i for i in range(len(self.conditions[ind])) if self.conditions[ind][i](data)]
+                n = [i for i in range(len(self[ind])) if self[ind][i](data)]
                 if not n:
                     msg = self.bot.send_message(sig[0].chat_id, 'Неверный ввод')
                     self.bot.register_next_step_handler(msg, self, ind=ind)
                 else:
                     n = n[0]
-                    if not isinstance(sig, Twig):
-                        if sig[n].content_type == 'text':
-                            msg = self.bot.send_message(list(*sig[n].values())[2:])
-                            self.bot.register_next_step_handler(msg, self, ind=ind + 1)
-                    else:
-                        sig(ind=0)
+                    if sig[n].content_type == 'text':
+                        msg = self.bot.send_message(*list(sig[n].params.values()))
+                        self.bot.register_next_step_handler(msg, self, ind=ind + 1)
+                    elif sig[n].content_type == 'twig':
+                        sig[n].params['twig'](ind=0)
         except:
             pass
 
@@ -278,14 +277,14 @@ class Twig:
 class Leaf:
     def __init__(self, content_type, keyboard=None, condition=lambda x: True):
         if not ((keyboard != None) == (isinstance(keyboard, InlineKeyboardMarkup) or isinstance(keyboard, ReplyKeyboardMarkup))):
-            raise TypeError(f'Wrong type for "keyboard" {type(keyboard)}')
+            raise TypeError({'Error': {'Type': type(keyboard)}, 'attribute': {'Name': 'keyboard', 'Types': [type(InlineKeyboardMarkup()), type(ReplyKeyboardMarkup())]}})
         if content_type not in ['text', 'photo', 'document']:
-            raise TypeError(f'Wrong type for "content_type" {type(content_type)}')
+            raise TypeError({'Error': {'Type': type(content_type)}, 'attribute': {'Name': 'condition', 'Types': [type('')]}})
         if type(condition) != type(lambda: True):
-            raise TypeError(f'Wrong type for "condition" {type(condition)}')
+            raise TypeError({'Error': {'Type': type(condition)}, 'attribute': {'Name': 'condition', 'Types': [type(lambda x: True)]}})
         self.content_type = ''
         self.condition = lambda x: True
-        self.keyboard = None
+        self.__keyboard = None
         self.types = {"text": {'chat_id': None, 
                                'text': None, 
                                'parse_mode': None, 
@@ -345,20 +344,22 @@ class Leaf:
 
     def set_content_type(self, content_type):
         if content_type not in ['text', 'photo', 'document']:
-            raise TypeError(f'Wrong type for "content_type" {type(content_type)}')
+            raise TypeError({'Error': {'Type': type(content_type)}, 'attribute': {'Name': 'condition', 'Types': [type('')]}})
         self.content_type = content_type
         self.params = self.types[content_type]
         return True
 
     def set_condition(self, condition):
         if type(condition) != type(lambda: True):
-            raise TypeError(f'Wrong type for "condition" {type(condition)}')
+            raise TypeError({'Error': {'Type': type(condition)}, 'attribute': {'Name': 'condition', 'Types': [type(lambda x: True)]}})
         self.condition = condition
         return True
 
     def set_keyboard(self, keyboard):
+        if self.content_type == 'twig':
+            raise TypeError({'Error': {'Type': 'twig'}, 'attribute': {'Name': 'keyboard', 'Types': ["'text'", "'photo'", "'document'"]}})
         if not ((keyboard != None) == (isinstance(keyboard, InlineKeyboardMarkup) or isinstance(keyboard, ReplyKeyboardMarkup))):
-            raise TypeError(f'Wrong type for "keyboard" {type(keyboard)}')
+            raise TypeError({'Error': {'Type': type(keyboard)}, 'attribute': {'Name': 'keyboard', 'Types': [type(InlineKeyboardMarkup()), type(ReplyKeyboardMarkup())]}})
         self.keyboard = keyboard
         return True
 
@@ -369,6 +370,6 @@ class Leaf:
         if type(params) != dict:
             raise TypeError(f'Wrong type for "params" {type(params)}')
         if list(self.params.keys()) != list(params.keys()):
-            raise ConnectionError(f'Wrong inputs for "params" {type(params)}')
+            raise ConnectionError({'Error': {'Type': ''}, 'attribute': {'Name': 'params', 'Types': ['', '', '']}})
         self.params = params
         return True

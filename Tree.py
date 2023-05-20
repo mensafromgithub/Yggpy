@@ -99,7 +99,14 @@ class Twig:
             self.bot = bot
             for i in range(len(self.callback_handlers)):
                 for j in range(len(self.callback_handlers[i])):
-                    self.callback_handlers[i][j](self.bot)
+                    for g in range(len(self.callback_handlers[i][j])):
+                        self.callback_handlers[i][j][g](self.bot)
+            for i in self.custom_mendlers.values():
+                i(self.bot)
+            for i in self.custom_candlers.values():
+                i(self.bot) 
+        else:
+            TypeError({'Error': {'Type': type(bot)}, 'attribute': {'Name': 'bot', 'Types': [str(TeleBot)]}})
 
     def set_user(self, user): #
         if user.isdigit():
@@ -108,6 +115,8 @@ class Twig:
                 for j in range(len(self.signals[i])):
                     if self.signals[i][j].content_type != 'twig':
                         self.signals[i][j].params['chat_id'] = self.user
+                    else:
+                        self.signals[i][j].params['twig'].set_user(self.user)
             return True
         return False
 
@@ -127,12 +136,8 @@ class Twig:
         self.signals[len(self)] = lambda x: x
         self.callback_handlers[n - 1] = {0: {}}
         if cont.keyboard != None:
-            if not self.bot:
-                for i, value in enumerate(cont.keyboard.keyboard):
-                    self.callback_handlers[n - 1][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda: self(data=str(value[0].callback_data), ind=n))
-            else:
-                for i, value in enumerate(cont.keyboard.keyboard):
-                    self.callback_handlers[n - 1][i] = self.bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda: self(data=str(value[0].callback_data), ind=n))
+            for i, value in enumerate(cont.keyboard.keyboard):
+                self.callback_handlers[n - 1][0][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x, ind=n))
         return True
 
     def replace_metre(self, cont, ind): #
@@ -143,12 +148,8 @@ class Twig:
         self.signals[ind] = {0: cont}
         self.callback_handlers[ind] = {0: {}}
         if cont.keyboard != None:
-            if not self.bot:
-                for i, value in enumerate(cont.keyboard.keyboard):
-                    self.callback_handlers[ind][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda: self(data=str(value[0].callback_data), ind=n))
-            else:
-                for i, value in enumerate(cont.keyboard.keyboard):
-                    self.callback_handlers[ind][i] = self.bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda: self(data=str(value[0].callback_data), ind=n))
+            for i, value in enumerate(cont.keyboard.keyboard):
+                self.callback_handlers[ind][0][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x, ind=ind + 1))
         return True
 
     def switch_metre(self, switchable, switched): #
@@ -220,14 +221,10 @@ class Twig:
         if n not in range(len(self[ind])):
             raise KeyError(f'Undefined index or key: {ind}/{n}')
         self.signals[ind][n] = cont
-        self.callback_handlers[ind][n] = {}
+        self.callback_handlers[ind][n] = {0: None}
         if cont.keyboard != None:
-            if not self.bot:
-                for i, value in enumerate(cont.keyboard.keyboard):
-                    self.callback_handlers[ind][n] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda: self(data=str(value[0].callback_data), ind=n))
-            else:
-                for i, value in enumerate(cont.keyboard.keyboard):
-                    self.callback_handlers[ind][n] = self.bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda: self(data=str(value[0].callback_data), ind=n))
+            for i, value in enumerate(cont.keyboard.keyboard):
+                self.callback_handlers[ind][n][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x, ind=ind + 1))
         return True
 
     def switch_leaf_without_conds(self, ind, switchable, switched): #
@@ -246,17 +243,13 @@ class Twig:
             return False
         n = len(self[ind])
         self.signals[ind][n] = cont
-        self.callback_handlers[ind][n] = {}
+        self.callback_handlers[ind][n] = {0: None}
         if cont.keyboard != None:
-            if not self.bot:
-                for i, value in enumerate(cont.keyboard.keyboard):
-                    self.callback_handlers[ind][n] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda: self(data=str(value[0].callback_data), ind=n))
-            else:
-                for i, value in enumerate(cont.keyboard.keyboard):
-                    self.callback_handlers[ind][n] = self.bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda: self(data=str(value[0].callback_data), ind=n))
+            for i, value in enumerate(cont.keyboard.keyboard):
+                self.callback_handlers[ind][n][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x, ind=ind + 1))
         return True
 
-    def del_metre(self, ind): #
+    def del_metre(self, ind): # удаление candler'а
         if ind not in range(len(self)):
             raise KeyError(f'Undefined index or key: {ind}')
         k = list(self.signals.keys())
@@ -265,7 +258,7 @@ class Twig:
         del self.signals[k[-1]]
         return True
 
-    def del_leaf(self, ind, n): #
+    def del_leaf(self, ind, n): # удаление candler'а
         if ind not in range(len(self)):
             raise KeyError(f'Undefined index or key: {ind}')
         if n not in range(len(self[ind])):
@@ -291,17 +284,39 @@ class Twig:
         cons += ' ...'
         return cons
 
-    def set_custom_candler(self, candler, name):
-        self.custom_candlers[name] = candler
+    def edit_candler(self, ind, n, nc, candler):
+        cd = self[ind][n].keyboard.keyboard[nc][0].callback_data
+        self.callback_handlers[ind][n] = lambda bot: bot.callback_query_handler(lambda x: x == cd)(lambda x: [self(data=x, ind=ind + 1), func])
+
+    def reset_candler(self, ind, n, nc):
+        cd = self[ind][n].keyboard.keyboard[nc][0].callback_data
+        self.callback_handlers[ind][n] = lambda bot: bot.callback_query_handler(lambda x: x == cd)(lambda x: self(data=x, ind=ind + 1))
+
+    def set_custom_candler(self, name, cond_func, func):
+        self.custom_candlers[name] = lambda bot: bot.callback_query_handler(cond_func)(func)
 
     def del_custom_candler(self, name):
         del self.custom_candlers[name]
 
-    def set_custom_mendler(self, candler, name):
-        self.custom_mendlers[name] = candler
+    def set_custom_mendler(self, name, conds, func):
+        self.custom_mendlers[name] = lambda bot: bot.message_handler(conds)(func)
 
     def del_custom_mendler(self, name):
         del self.custom_mendlers[name]
+
+    def activate_candlers_mendlers(self):
+        if not self.bot:
+            return False
+        for i in range(len(self.callback_handlers)):
+            for j in range(len(self.callback_handlers[i])):
+                for g in range(len(self.callback_handlers[i][j])):
+                    self.callback_handlers[i][j][g](self.bot)
+        for i in self.custom_mendlers.values():
+            i(self.bot)
+        for i in self.custom_candlers.values():
+            i(self.bot)
+        return True
+
 
 
 class Leaf:
@@ -430,10 +445,10 @@ class Leaf:
         self.keyboard = keyboard
         return True
 
-    def get_params(self):
+    def get_params(self): #
         return self.params
 
-    def set_params(self, params: dict):
+    def set_params(self, params: dict): #
         if type(params) != dict:
             raise TypeError(f'Wrong type for "params" {type(params)}')
         if list(self.params.keys()) != list(params.keys()):

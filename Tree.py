@@ -41,7 +41,7 @@ class Tree:
 
     def __str__(self):
         return str(self.twigs)
-    
+
 
 class Twig:
     def __init__(self, name, bot, user):
@@ -64,8 +64,8 @@ class Twig:
 
     def __len__(self): #
         return len(self.signals)
-                 
-    def __call__(self, data=None,  ind=0): 
+
+    def __call__(self, data=None,  ind=0):
         try:
                 sig = self.signals[ind]
                 n = [i for i in range(len(self[ind])) if self[ind][i].check_condition(data)]
@@ -104,7 +104,7 @@ class Twig:
             for i in self.custom_mendlers.values():
                 i(self.bot)
             for i in self.custom_candlers.values():
-                i(self.bot) 
+                i(self.bot)
         else:
             TypeError({'Error': {'Type': type(bot)}, 'attribute': {'Name': 'bot', 'Types': [str(TeleBot)]}})
 
@@ -128,7 +128,7 @@ class Twig:
     def switch_keyboards(leaf1, leaf2): #
         leaf1.keyboard, leaf2.keyboard = leaf2.keyboard, leaf1.keyboard
 
-    def make_metre(self, cont): # 
+    def make_metre(self, cont): #
         if not isinstance(cont, Leaf):
                 return False
         n = len(self) if len(self) > 0 else len(self) + 1
@@ -137,7 +137,7 @@ class Twig:
         self.callback_handlers[n - 1] = {0: {}}
         if cont.keyboard != None:
             for i, value in enumerate(cont.keyboard.keyboard):
-                self.callback_handlers[n - 1][0][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x, ind=n))
+                self.callback_handlers[n - 1][0][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x.data, ind=n))
         return True
 
     def replace_metre(self, cont, ind): #
@@ -149,7 +149,7 @@ class Twig:
         self.callback_handlers[ind] = {0: {}}
         if cont.keyboard != None:
             for i, value in enumerate(cont.keyboard.keyboard):
-                self.callback_handlers[ind][0][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x, ind=ind + 1))
+                self.callback_handlers[ind][0][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x.data, ind=ind + 1))
         return True
 
     def switch_metre(self, switchable, switched): #
@@ -224,7 +224,7 @@ class Twig:
         self.callback_handlers[ind][n] = {0: None}
         if cont.keyboard != None:
             for i, value in enumerate(cont.keyboard.keyboard):
-                self.callback_handlers[ind][n][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x, ind=ind + 1))
+                self.callback_handlers[ind][n][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x.data, ind=ind + 1))
         return True
 
     def switch_leaf_without_conds(self, ind, switchable, switched): #
@@ -235,7 +235,7 @@ class Twig:
         Twig.switch_conditions(self[ind][switchable], self[ind][switched])
         self.signals[ind][switchable], self.signals[ind][switched] = self.signals[ind][switched], self.signals[ind][switchable]
         return True
-    
+
     def add_leaf(self, cont, ind): #
         if ind not in range(len(self)):
             raise KeyError(f'Undefined index or key: {ind}')
@@ -246,7 +246,7 @@ class Twig:
         self.callback_handlers[ind][n] = {0: None}
         if cont.keyboard != None:
             for i, value in enumerate(cont.keyboard.keyboard):
-                self.callback_handlers[ind][n][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x, ind=ind + 1))
+                self.callback_handlers[ind][n][i] = lambda bot: bot.callback_query_handler(func=lambda x: x == value[0].callback_data)(lambda x: self(data=x.data, ind=ind + 1))
         return True
 
     def del_metre(self, ind): # удаление candler'а
@@ -284,13 +284,13 @@ class Twig:
         cons += ' ...'
         return cons
 
-    def edit_candler(self, ind, n, nc, candler):
+    def edit_candler(self, ind, n, nc, func=None): # нужно ли?
         cd = self[ind][n].keyboard.keyboard[nc][0].callback_data
-        self.callback_handlers[ind][n] = lambda bot: bot.callback_query_handler(lambda x: x == cd)(lambda x: [self(data=x, ind=ind + 1), func])
+        self.callback_handlers[ind][n] = lambda bot: bot.callback_query_handler(lambda x: x == cd)(lambda x: [self(data=x.data, ind=ind + 1), func])
 
-    def reset_candler(self, ind, n, nc):
+    def reset_candler(self, ind, n, nc): # нужно ли?
         cd = self[ind][n].keyboard.keyboard[nc][0].callback_data
-        self.callback_handlers[ind][n] = lambda bot: bot.callback_query_handler(lambda x: x == cd)(lambda x: self(data=x, ind=ind + 1))
+        self.callback_handlers[ind][n] = lambda bot: bot.callback_query_handler(lambda x: x == cd)(lambda x: self(data=x.data, ind=ind + 1))
 
     def set_custom_candler(self, name, cond_func, func):
         self.custom_candlers[name] = lambda bot: bot.callback_query_handler(cond_func)(func)
@@ -330,17 +330,17 @@ class Leaf:
         self.content_type = ''
         self.condition = lambda x: True
         self.keyboard = None
-        self.types = {"text": {'chat_id': None, 
-                               'text': None, 
-                               'parse_mode': None, 
-                               'entities': None, 
-                               'disable_web_page_preview': None, 
-                               'disable_notification': None, 
-                               'protect_content': None, 
-                               'reply_to_message_id': None, 
-                               'allow_sending_without_reply': None, 
-                               'reply_markup': None, 
-                               'timeout': None, 
+        self.types = {"text": {'chat_id': None,
+                               'text': None,
+                               'parse_mode': None,
+                               'entities': None,
+                               'disable_web_page_preview': None,
+                               'disable_notification': None,
+                               'protect_content': None,
+                               'reply_to_message_id': None,
+                               'allow_sending_without_reply': None,
+                               'reply_markup': None,
+                               'timeout': None,
                                'message_thread_id': None},
                       "photo": {'chat_id': None,
                                 'photo': None,
@@ -426,7 +426,7 @@ class Leaf:
 
     def set_content_type(self, content_type): #
         if content_type not in ['text', 'photo', 'document']:
-            raise TypeError({'Error': {'Type': type(content_type)}, 'attribute': {'Name': 'condition', 'Types': [type('')]}})
+            raise TypeError({'Error': {'Type': type(content_type)}, 'attribute': {'Name': 'content_type', 'Types': ['text', 'photo', 'document']}})
         self.content_type = content_type
         self.params = self.types[content_type]
         return True

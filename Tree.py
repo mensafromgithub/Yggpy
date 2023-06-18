@@ -327,7 +327,7 @@ class Leaf:
             raise TypeError({'Error': {'Type': type(content_type)}, 'attribute': {'Name': 'condition', 'Types': [type('')]}})
         if type(condition) != type(lambda: True):
             raise TypeError({'Error': {'Type': type(condition)}, 'attribute': {'Name': 'condition', 'Types': [type(lambda x: True)]}})
-        self.content_type = ''
+        self.content_type = content_type
         self.condition = lambda x: True
         self.keyboard = None
         self.types = {"text": {'chat_id': None,

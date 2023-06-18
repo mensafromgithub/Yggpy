@@ -109,7 +109,7 @@ class Twig:
             TypeError({'Error': {'Type': type(bot)}, 'attribute': {'Name': 'bot', 'Types': [str(TeleBot)]}})
 
     def set_user(self, user): #
-        if user.isdigit():
+        if type(user) == int:
             self.user = user
             for i in range(len(self.signals) - 1):
                 for j in range(len(self.signals[i])):

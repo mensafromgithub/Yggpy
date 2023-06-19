@@ -75,16 +75,25 @@ class Twig:
                 else:
                     n = n[0]
                     if sig[n].content_type == 'text':
-                        msg = self.bot.send_message(*list(sig[n].params.values()))
-                        self.bot.register_next_step_handler(msg, self, ind=ind + 1)
+                        if type(self.signals[ind + 1]) != type(lambda: True):
+                            msg = self.bot.send_message(*list(sig[n].params.values()))
+                            self.bot.register_next_step_handler(msg, self, ind=ind + 1)
+                        else:
+                            self.bot.send_message(*list(sig[n].params.values()))
                     elif sig[n].content_type == 'twig':
                         sig[n].params['twig'](ind=0)
                     elif sig[n].content_type == 'photo':
-                        msg = self.bot.send_photo(*list(sig[n].params.values()))
-                        self.bot.register_next_step_handler(msg, self, ind=ind + 1)
+                        if type(self.signals[ind + 1]) != type(lambda: True):
+                            msg = self.bot.send_photo(*list(sig[n].params.values()))
+                            self.bot.register_next_step_handler(msg, self, ind=ind + 1)
+                        else:
+                            self.bot.send_message(*list(sig[n].params.values()))
                     elif sig[n].content_type == 'document':
-                        msg = self.bot.send_document(*list(sig[n].params.values()))
-                        self.bot.register_next_step_handler(msg, self, ind=ind + 1)
+                        if type(self.signals[ind + 1]) != type(lambda: True):
+                            msg = self.bot.send_document(*list(sig[n].params.values()))
+                            self.bot.register_next_step_handler(msg, self, ind=ind + 1)
+                        else:
+                            self.bot.send_message(*list(sig[n].params.values()))
         except:
             pass
 
